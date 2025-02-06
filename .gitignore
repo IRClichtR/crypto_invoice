@@ -1,0 +1,37 @@
+# env file
+.env
+
+# logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# node
+node_modules/
+jspm_packages/
+.npm
+
+
+# yqrn
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+.yarn-integrity
+
+# vue
+.vuepress/dist
+.temp
+.cache
+.nuxt
+dist
+
+
+# rust
+debug/
+target/
+**/*.rs.bk
+*.pdb
