@@ -169,4 +169,15 @@ describe("InvoicePayment", function () {
       escrow.connect(emitter).resolveDispute(1, false),
     ).to.be.revertedWith("Only arbitrator can perform this action");
   });
+
+  it("Should show contract balance after payment", async function () {
+    await escrow.connect(emitter).createInvoice(
+      client.address,
+      parseEther("1.0"),
+    );
+    escrow.connect(client).payInvoice(1, { value: parseEther("1.0") });
+
+    const balance = await escrow.getBalance();
+    expect(balance).to.equal(parseEther("1.0"));
+  });
 });

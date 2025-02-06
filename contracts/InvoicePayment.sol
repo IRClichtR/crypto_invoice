@@ -70,6 +70,10 @@ contract InvoicePayment is Ownable {
     emit InvoiceCreated(invoiceCount, _client, msg.sender, _amount);
   }
 
+  function getBalance() public view returns (uint256) {
+    return address(this).balance;
+  }
+
   function payInvoice(uint256 _invoiceId) public payable onlyClient(_invoiceId) {
     Invoice storage invoice = invoices[_invoiceId];
     require(invoice.status == Status.Pending, "Invoice must be pending");
@@ -104,6 +108,7 @@ contract InvoicePayment is Ownable {
     Invoice storage invoice = invoices[_invoiceId];
     require(invoice.status == Status.Paid, "Payment must be completed first");
 
+    require(address(this).balance >= invoice.amount, "Contract balance too low");
     invoice.status = Status.Released;
     invoice.emitter.transfer(invoice.amount);
     emit PaymentReleased(_invoiceId, invoice.amount);
