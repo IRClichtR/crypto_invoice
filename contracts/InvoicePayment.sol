@@ -3,13 +3,14 @@ pragma solidity 0.8.28;
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract InvoicePayment is Ownable {
-  enum Status { Pending, Paid, Disputed, Released }
+  enum Status { Pending, Paid, Disputed, Released, Validated }
 
   struct Invoice {
     uint256 invoiceId;
     address payable client;
     address payable emitter;
     uint256 amount;
+    uint256 paymentTimeStamp;
     Status status;
   }
 
@@ -18,10 +19,12 @@ contract InvoicePayment is Ownable {
   address public arbitrator;
   address payable public platformWallet;
   uint256 public platformFeePercent = 2;
+  uint256 public paymentTimeout = 7 days;
 
   event InvoiceCreated(uint256 invoiceId, address client, address emitter, uint256 amount);
-  event PaymentMade(uint256 indexed invoiceId, uint256 amount, uint256 fee);
-  event PaymentReleased(uint256 indexed invoiceId, uint256 amount);
+  event PaymentMade(uint256 indexed invoiceId, uint256 amount);
+  event PaymentConfirmed(uint256 indexed invoiceId);
+  event PaymentReleased(uint256 indexed invoiceId, uint256 amount, uint256 fee);
   event PaymentDisputed(uint256 indexed invoiceId, address disputor);
   event ArbitratorChanged(address newArbitrator);
   event DisputeResolved(uint256 indexed invoiceId, bool releasedToEmitter);
@@ -37,7 +40,7 @@ contract InvoicePayment is Ownable {
   }
 
   modifier onlyArbitrator() {
-    require(msg.sender == arbitrator, "Only client can perform this action");
+    require(msg.sender == arbitrator, "Only arbitrator can perform this action");
     _;
   }
 
@@ -56,19 +59,25 @@ contract InvoicePayment is Ownable {
     platformFeePercent = _newFee;
   }
 
-  function createInvoice(address payable _client, uint256 _amount) public {
+  function setPaymentTimeout(uint256 _newTimeout) public onlyOwner {
+    require(_newTimeout >= 1 days, "Timeout must be at least one day");
+    paymentTimeout = _newTimeout;
+  }
+
+function createInvoice(address payable _client, uint256 _amount) public {
     invoiceCount++;
 
-    invoices[invoiceCount] = Invoice(
-      invoiceCount,
-      _client,
-      payable(msg.sender), //emitter is calling the function then msg.sender refersto it
-      _amount,
-      Status.Pending
-    );
+    invoices[invoiceCount] = Invoice({
+        invoiceId: invoiceCount,
+        client: _client,
+        emitter: payable(msg.sender),
+        amount: _amount,
+        paymentTimeStamp: 0,
+        status: Status.Pending
+    });
 
     emit InvoiceCreated(invoiceCount, _client, msg.sender, _amount);
-  }
+}
 
   function getBalance() public view returns (uint256) {
     return address(this).balance;
@@ -78,40 +87,58 @@ contract InvoicePayment is Ownable {
     Invoice storage invoice = invoices[_invoiceId];
     require(invoice.status == Status.Pending, "Invoice must be pending");
     require(msg.value == invoice.amount, "Incorrect payment amount");
+    require(msg.value <= address(msg.sender).balance, "Insufficient balance to pay Invoice");
 
-    uint256 fee = (msg.value * platformFeePercent) / 100;
-    uint256 amountToEmitter = msg.value - fee;
-
-    platformWallet.transfer(fee);
+    invoice.paymentTimeStamp = block.timestamp;
     invoice.status = Status.Paid;
 
-    emit PaymentMade(_invoiceId, amountToEmitter, fee);
+    emit PaymentMade(_invoiceId, msg.value);
   }
 
-  function disputeInvoiceByClient(uint256 _invoiceId) public onlyClient(_invoiceId) {
+  function confirmPayment(uint256 _invoiceId) public onlyClient(_invoiceId) {
     Invoice storage invoice = invoices[_invoiceId];
-    require(invoice.status == Status.Paid, "Payment must be in progress");
+    require(invoice.status == Status.Paid, 'invoice must be paid first');
+    
+    uint256 fee = (invoice.amount * platformFeePercent) / 100;
+    uint256 amountToEmitter = invoice.amount - fee;
 
-    invoice.status = Status.Disputed;
-    emit PaymentDisputed(_invoiceId, msg.sender);
+    platformWallet.transfer(fee);
+    invoice.emitter.transfer(amountToEmitter);
+
+    invoice.status = Status.Validated;
+    emit PaymentConfirmed(_invoiceId);
+    emit PaymentReleased(_invoiceId, amountToEmitter, fee);
   }
 
-  function disputeInvoiceByEmitter(uint256 _invoiceId) public onlyEmitter(_invoiceId) {
+  function autoReleasePayment(uint256 _invoiceId) public {
     Invoice storage invoice = invoices[_invoiceId];
-    require(invoice.status == Status.Paid, "Payment must be in progress");
+    require(invoice.status == Status.Paid, 'invoice must be paid first');
+    require(block.timestamp >= invoice.paymentTimeStamp + paymentTimeout, "Timeout not reached");
 
-    invoice.status = Status.Disputed;
-    emit PaymentDisputed(_invoiceId, msg.sender);
-  }
+    uint256 fee = (invoice.amount * platformFeePercent) / 100;
+    uint256 amountToEmitter = invoice.amount - fee;
 
-  function releasePayment(uint256 _invoiceId) public onlyClient(_invoiceId) {
-    Invoice storage invoice = invoices[_invoiceId];
-    require(invoice.status == Status.Paid, "Payment must be completed first");
+    platformWallet.transfer(fee);
+    invoice.emitter.transfer(amountToEmitter);
 
-    require(address(this).balance >= invoice.amount, "Contract balance too low");
     invoice.status = Status.Released;
-    invoice.emitter.transfer(invoice.amount);
-    emit PaymentReleased(_invoiceId, invoice.amount);
+    emit PaymentReleased(_invoiceId, amountToEmitter, fee);
+  }
+
+  function disputeByClient(uint256 _invoiceId) public onlyClient(_invoiceId) {
+    Invoice storage invoice = invoices[_invoiceId];
+    require(invoice.status == Status.Paid, "Payment must be in progress");
+
+    invoice.status = Status.Disputed;
+    emit PaymentDisputed(_invoiceId, msg.sender);
+  }
+
+  function disputeByEmitter(uint256 _invoiceId) public onlyEmitter(_invoiceId) {
+    Invoice storage invoice = invoices[_invoiceId];
+    require(invoice.status == Status.Paid, "Payment must be in progress");
+
+    invoice.status = Status.Disputed;
+    emit PaymentDisputed(_invoiceId, msg.sender);
   }
 
   function resolveDispute(uint256 _invoiceId, bool releaseToEmitter) public onlyArbitrator {
