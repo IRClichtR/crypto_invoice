@@ -1,11 +1,15 @@
-use config:: {COnfig, ConfigError, Environment, File};
+use config:: {Config, ConfigError, Environment, File};
 use serde::Deserialize;
 use std::env;
+use sqlx::postgres::PgPoolOptions;
+use sqlx::PgPool;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Database {
     pub url: String,
     pub max_connections: u32,
+    pub timeout: u64,
+    
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -50,4 +54,19 @@ impl AppConfig {
         config.try_deserialize::<AppConfig>()
             .map_err(|e| ConfigError::Message(format!("Failed to deserialize config: {}", e)))
     }
+
+    pub fn drop_config(&self) {
+        println!("Dropping config...");
+        // Placeholder for database pool cleanup logic
+    }
+}
+
+pub async fn init_config(config: AppConfig) -> Result<PgPool, sqlx::Error> {
+    let config = AppConfig::new().expect("Failed to load configuration");
+    let db_url = &config.database.url;
+    let max_connections = config.database.max_connections;
+
+    PgPoolOptions::new()
+        .max_connections(max_connections)
+        .connect(db_url)
 }
