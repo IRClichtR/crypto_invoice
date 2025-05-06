@@ -3,13 +3,14 @@ use serde::Deserialize;
 use std::env;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
+use std::time::Duration;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Database {
     pub url: String,
     pub max_connections: u32,
     pub timeout: u64,
-    
+
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -66,7 +67,17 @@ pub async fn init_config(config: AppConfig) -> Result<PgPool, sqlx::Error> {
     let db_url = &config.database.url;
     let max_connections = config.database.max_connections;
 
-    PgPoolOptions::new()
+    let pool = PgPoolOptions::new()
         .max_connections(max_connections)
+        .acquire_timeout(Duration::from_secs(config.database.timeout))
+        .idle_timeout(Duration::from_secs(config.database.timeout))
         .connect(db_url)
+        .await?;
+
+    // Test
+    sqlx::query("SELECT 1")
+        .fetch_one(&pool)
+        .await?;
+
+    Ok(pool)
 }

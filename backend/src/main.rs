@@ -2,9 +2,13 @@ mod config;
 mod utils;
 mod routes;
 mod models;
+mod app_error;
 
 use tokio;
 use axum;
+use axum::Router;
+use crate::app_error::app_error::AppError;
+
 
 #[tokio::main]
 async fn main() {
@@ -15,7 +19,7 @@ async fn main() {
         .await
         .expect("Failed to initialize database connection pool");
 
-    let router = routes::create_router(config.clone());
+    // let router = routes::create_router(config.clone());
 
     let addr = format!("{}:{}", config.server.host, config.server.port);
 
@@ -23,13 +27,4 @@ async fn main() {
         .await
         .expect("Failed to bind TCP listener");
     println!("Server started. Listening on port {}", config.server.port);
-
-    axum::serve(listener, router)
-        .with_graceful_shutdown(async {
-            if let Err(e) = utils::server_utils::shutdown_signal(config).await {
-                eprintln!("Error during shutdown: {}", e);
-            }
-        })
-        .await
-        .expect("Failed to start server");
 }
