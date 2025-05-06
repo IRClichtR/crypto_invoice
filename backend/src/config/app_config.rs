@@ -4,19 +4,46 @@ use std::env;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
 use std::time::Duration;
+use crate::app_error::app_error::AppError; // Ensure app_error.rs exists and is correctly defined
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Database {
     pub url: String,
     pub max_connections: u32,
     pub timeout: u64,
+}
 
+impl Database {
+    pub fn validate_db(&self) -> Result<(), AppError> {
+        if self.url.is_empty() {
+            return Err(AppError::DatabaseError("Database URL is empty".to_string()));
+        }
+        if self.max_connections == 0 {
+            return Err(AppError::DatabaseError("Max connections must be greater than 0".to_string()));
+        }
+        if self.timeout == 0 {
+            return Err(AppError::DatabaseError("Timeout must be greater than 0".to_string()));
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Server {
     pub host: String,
     pub port: u16,
+}
+
+impl Server {
+    pub fn validate_server(&self) -> Result<(), AppError> {
+        if self.host.is_empty() {
+            return Err(AppError::ServerError("Server host is empty".to_string()));
+        }
+        if self.port == 0 {
+            return Err(AppError::ServerError("Server port must be greater than 0".to_string()));
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -63,9 +90,10 @@ impl AppConfig {
 }
 
 pub async fn init_config(config: AppConfig) -> Result<PgPool, sqlx::Error> {
-    let config = AppConfig::new().expect("Failed to load configuration");
     let db_url = &config.database.url;
     let max_connections = config.database.max_connections;
+    eprintln!("Database URL: {}", db_url);
+    eprintln!("Max Connections: {}", max_connections);
 
     let pool = PgPoolOptions::new()
         .max_connections(max_connections)
@@ -75,9 +103,12 @@ pub async fn init_config(config: AppConfig) -> Result<PgPool, sqlx::Error> {
         .await?;
 
     // Test
-    sqlx::query("SELECT 1")
+    _ = sqlx::query("SELECT 1")
         .fetch_one(&pool)
-        .await?;
+        .await
+        .map_err(|e| {
+            AppError::DatabaseError(format!("Failed to connect to database: {}", e))
+        });
 
     Ok(pool)
 }

@@ -1,0 +1,31 @@
+# default.toml - Default configuration for the crypto_invoice application
+
+[database]
+# PostgreSQL connection URL for local development
+url = "postgresql://user:password@localhost:5432/db"
+# Maximum number of connections in the pool
+max_connections = 5
+# Timeout in seconds for acquiring a connection
+timeout = 30
+
+[server]
+# HTTP server listening address
+host = "127.0.0.1"
+# Listening port
+port = 8080
+
+[ethereum]
+# Ethereum RPC endpoint URL (use a provider like Infura, Alchemy or a local node)
+rpc_url = "http://localhost:8545"
+# Leave empty and use environment variables in production
+private_key = ""
+# Smart contract address (replace with actual address after deployment)
+contract_address = "0x0000000000000000000000000000000000000000"
+# Ethereum chain ID (1 for Mainnet, 5 for Goerli, 11155111 for Sepolia)
+chain_id = 11155111
+
+[auth]
+# DO NOT USE THIS VALUE IN PRODUCTION - Set via environment variables instead!
+jwt_secret = "CHANGE_THIS_VALUE_IN_PRODUCTION"
+# Token validity duration in seconds (24 hours)
+token_expires_in = 86400

@@ -6,7 +6,7 @@ mod app_error;
 
 use tokio;
 use axum;
-use axum::Router;
+use axum::{Router, routing::get};
 use crate::app_error::app_error::AppError;
 
 
@@ -17,14 +17,26 @@ async fn main() {
 
     let pool = config::app_config::init_config(config.clone())
         .await
-        .expect("Failed to initialize database connection pool");
+        .map_err(|e| {
+            AppError::DatabaseError(format!("Failed to initialize database: {}", e))
+        })
+        .expect("Failed to initialize database");
 
     // let router = routes::create_router(config.clone());
+    let route = Router::<()>::new()
+        .route("/", axum::routing::get(|| async { "Hello, World!" }));
 
     let addr = format!("{}:{}", config.server.host, config.server.port);
 
     let listener = tokio::net::TcpListener::bind(&addr)
         .await
         .expect("Failed to bind TCP listener");
-    println!("Server started. Listening on port {}", config.server.port);
+    println!("Listening on port {}", config.server.port);
+
+    axum::serve(listener, route)
+        .await
+        .expect("Failed to start server");
+    // Drop the database pool
+    pool.close().await;
+
 }
