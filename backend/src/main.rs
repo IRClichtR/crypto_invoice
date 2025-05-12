@@ -4,17 +4,61 @@ mod routes;
 mod models;
 mod app_error;
 
+use axum::{
+    extract::State,
+    Router,
+    routing::get
+};
+use axum_csrf::{
+    CsrfConfig, CsrfLayer, CsrfToken, Key
+};
+use hyper::header;
+use tower_cookies::CookieManagerLayer;
 use tokio;
-use axum;
-use axum::{Router, routing::get};
+use tower_http::services::ServeDir;
+use std::{sync::Arc, path::Path, net::SocketAddr, time::Duration};
 use crate::app_error::app_error::AppError;
+// Removed incomplete use statement
 
+#[derive(Clone)]
+pub struct AppState {
+    pub vue_dist_path: String,
+    pub config: config::app_config::AppConfig,
+    pub pool: sqlx::PgPool,
+}
+
+pub struct AppCsrfConfig {
+    pub csrf_key: Key,
+    pub csrf_config: CsrfConfig,
+}
+
+impl AppCsrfConfig {
+    pub fn new() -> Self {
+        let csrf_key = Key::generate();
+        let csrf_config = CsrfConfig::new()
+            .with_key(Some(csrf_key.clone()))
+            .with_cookie_path("/".to_string());
+
+        AppCsrfConfig { csrf_key, csrf_config }
+    }
+}
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), AppError> {
+    //Set up csrf
+    let csrf_config = AppCsrfConfig::new();
+
+    // define the path to the Vue.js dist directory
+    let vue_dist_path = std::env::var("VUE_DIST_PATH")
+        .unwrap_or_else(|_| {
+            Path::new("dist").to_string_lossy().to_string()
+        });
+
+    // Set up configuration
     let config = config::app_config::AppConfig::new()
         .expect("Failed to load configuration");
 
+    // Create pool for postgres
     let pool = config::app_config::init_config(config.clone())
         .await
         .map_err(|e| {
@@ -22,9 +66,29 @@ async fn main() {
         })
         .expect("Failed to initialize database");
 
-    // let router = routes::create_router(config.clone());
-    let route = Router::<()>::new()
-        .route("/", axum::routing::get(|| async { "Hello, World!" }));
+    // Create application state
+    let app_state = Arc::new(AppState {
+        vue_dist_path: vue_dist_path.clone(),
+        config: config.clone(),
+        pool: pool.clone(),
+    });
+
+    // Create the router
+    let app = Router::new()
+        .route("/", get(routes::home::serve_home))
+        // other routes to be added here
+        .nest_service(
+            "/assets", ServeDir::new(format!("{}/assets", vue_dist_path))
+        )
+        .layer(CookieManagerLayer::new())
+        .layer(CsrfLayer::new(csrf_config.csrf_config.clone()))
+        .layer(
+            tower_http::set_header::SetResponseHeaderLayer::if_not_present(
+                header::X_CONTENT_TYPE_OPTIONS,
+                header::HeaderValue::from_static("nosniff"),
+            )
+        )
+        .with_state(app_state);
 
     let addr = format!("{}:{}", config.server.host, config.server.port);
 
@@ -33,10 +97,14 @@ async fn main() {
         .expect("Failed to bind TCP listener");
     println!("Listening on port {}", config.server.port);
 
-    axum::serve(listener, route)
+    axum::serve(listener, app)
+        .with_graceful_shutdown(
+            utils::server_utils::shutdown_signal(config.clone())
+        )
         .await
         .expect("Failed to start server");
-    // Drop the database pool
+
     pool.close().await;
 
+    Ok(())
 }

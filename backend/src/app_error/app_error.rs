@@ -1,6 +1,9 @@
-use thiserror::Error;
+// use thiserror::Error;
 use std::fmt;
-use std::io;
+
+use axum::response::{IntoResponse, Response};
+use hyper::http::StatusCode;
+// use std::io;
 
 
 #[derive(Debug)]
@@ -32,6 +35,18 @@ impl std::error::Error for AppError {
             AppError::ServerError(_) => None,
             AppError::SignalError(_) => None,
             AppError::OtherError(_) => None,
+        }
+    }
+}
+
+impl IntoResponse for AppError {
+    fn into_response(self) -> Response {
+        match self {
+            AppError::ConfigError(msg) => (StatusCode::BAD_REQUEST, msg).into_response(),
+            AppError::DatabaseError(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg).into_response(),
+            AppError::ServerError(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg).into_response(),
+            AppError::SignalError(msg) => (StatusCode::SERVICE_UNAVAILABLE, msg).into_response(),
+            AppError::OtherError(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg).into_response(),
         }
     }
 }

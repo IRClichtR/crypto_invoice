@@ -6,7 +6,8 @@ edition = "2024"
 [dependencies]
 anyhow = "1.0.98"
 argon2 = "0.5.3"
-axum = "0.8.3"
+axum = { version = "0.8.3", features = ["macros"] }
+axum_csrf = { version = "0.11.0", features = ["layer"] }
 chrono = { version = "0.4.41", features = ["serde"] }
 config = "0.15.11"
 dotenv = "0.15.0"
@@ -19,7 +20,8 @@ sqlx = { version = "0.8.5", features = ["runtime-tokio-native-tls", "postgres", 
 thiserror = "2.0.12"
 tokio = {version = "1.44.2", features = ["full"] }
 tower = "0.5.2"
-tower-http = { version = "0.6.2", features = ["cors", "trace"] }
+tower-cookies = "0.11.0"
+tower-http = { version = "0.6.2", features = ["cors", "trace", "fs", "set-header"] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 uuid = { version = "1.16.0", features = ["v4", "serde"] }
