@@ -36,8 +36,13 @@ impl AppCsrfConfig {
     pub fn new() -> Self {
         let csrf_key = Key::generate();
         let csrf_config = CsrfConfig::new()
-            .with_key(Some(csrf_key.clone()))
-            .with_cookie_path("/".to_string());
+        .with_key(Some(csrf_key.clone()))
+        .with_cookie_path("/".to_string())
+        .with_http_only(true)    
+        .with_secure(true)       
+        .with_cookie_same_site(axum_csrf::SameSite::Strict) 
+        .with_secure(Some("csrf_token".to_string()).is_some())
+        .with_cookie_name(&"_csrf".to_string());
 
         AppCsrfConfig { csrf_key, csrf_config }
     }

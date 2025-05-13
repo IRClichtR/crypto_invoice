@@ -29,3 +29,9 @@ chain_id = 11155111
 jwt_secret = "CHANGE_THIS_VALUE_IN_PRODUCTION"
 # Token validity duration in seconds (24 hours)
 token_expires_in = 86400
+
+[frontend]
+api_url = "http://localhost:8545"
+dev_server_port = 3000
+assets_path = "/assets"
+debug = true
