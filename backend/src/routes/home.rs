@@ -23,7 +23,6 @@ pub async fn serve_home(
 ) -> Result<impl IntoResponse, AppError> {
     // Build the complete path to the index.html file
     let index_path = format!("{}/index.html", app_state.vue_dist_path);
-    eprintln!("Index path: {}", index_path);
     
     // Read the HTML file content
     let mut html_content = fs::read_to_string(Path::new(&index_path))

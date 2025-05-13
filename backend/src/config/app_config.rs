@@ -101,8 +101,6 @@ impl AppConfig {
 pub async fn init_config(config: AppConfig) -> Result<PgPool, sqlx::Error> {
     let db_url = &config.database.url;
     let max_connections = config.database.max_connections;
-    eprintln!("Database URL: {}", db_url);
-    eprintln!("Max Connections: {}", max_connections);
 
     let pool = PgPoolOptions::new()
         .max_connections(max_connections)

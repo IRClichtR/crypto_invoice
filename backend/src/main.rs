@@ -50,6 +50,10 @@ impl AppCsrfConfig {
 
 #[tokio::main]
 async fn main() -> Result<(), AppError> {
+    // Load env
+    dotenv::dotenv()
+        .map_err(|e| AppError::ConfigError(format!("Failed to load .env file: {}", e)))?;
+
     //Set up csrf
     let csrf_config = AppCsrfConfig::new();
 
@@ -58,6 +62,7 @@ async fn main() -> Result<(), AppError> {
         .unwrap_or_else(|_| {
             Path::new("dist").to_string_lossy().to_string()
         });
+
 
     // Set up configuration
     let config = config::app_config::AppConfig::new()
