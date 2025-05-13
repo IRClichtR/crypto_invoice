@@ -1,21 +1,16 @@
 use axum::{
     extract::State,
     http::{header, HeaderMap, StatusCode},
-    response::{Html, IntoResponse},
+    response::{Html, IntoResponse}
 };
 use axum_csrf::CsrfToken;
-use serde::Serialize;
 use std::{fs, path::Path, sync::Arc};
 
 use crate::{
-    AppState,
-    app_error::app_error::AppError,
+    app_error::app_error::AppError, 
+    config::app_config::get_serializable_frontend_config, 
+    AppState
 };
-
-#[derive(Serialize)]
-struct FrontendConfig {
-    csrf_token: String,
-}
 
 #[axum::debug_handler]
 pub async fn serve_home(
@@ -26,27 +21,25 @@ pub async fn serve_home(
 
     match fs::read_to_string(Path::new(&index_path)) {
         Ok(mut html_content) => {
-            // Minimal frontend config
-            let frontend_config = FrontendConfig {
-                csrf_token: match csrf_token.authenticity_token() {
-                    Ok(token) => token,
-                    Err(_) => return Err(AppError::ServerError("Failed to retrieve CSRF token".to_string())),
-                },
+            let token = match csrf_token.authenticity_token() {
+                Ok(token) => token,
+                Err(_) => return Err(AppError::ServerError("Failed to retrieve CSRF token".to_string())),
             };
-            
+
+            let frontend_config = get_serializable_frontend_config(
+                &app_state.config.frontend, 
+                token
+            );
+
             let config_json = serde_json::to_string(&frontend_config)
                 .map_err(|e| AppError::ServerError(format!(
-                    "Failed to serialize CSRF token: {}", e
+                    "Failed to serialize frontend config: {}", e
                 )))?;
             
             // Insert configuration into HTML
             html_content = html_content.replace(
                 "<!-- BACKEND_CONFIG -->", 
-                &format!("<script>window.CSRF_TOKEN = '{}';</script>", 
-                    match csrf_token.authenticity_token() {
-                        Ok(token) => token,
-                        Err(_) => return Err(AppError::ServerError("Failed to retrieve CSRF token".to_string())),
-                    })
+                &format!("<script>window.BACKEND_CONFIG = {};</script>", config_json)
             );
             
             // Header configuration

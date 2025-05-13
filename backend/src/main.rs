@@ -5,18 +5,18 @@ mod models;
 mod app_error;
 
 use axum::{
-    extract::State,
     Router,
     routing::get
 };
 use axum_csrf::{
-    CsrfConfig, CsrfLayer, CsrfToken, Key
+    CsrfConfig, CsrfLayer, Key
 };
 use hyper::header;
 use tower_cookies::CookieManagerLayer;
 use tokio;
-use tower_http::services::ServeDir;
-use std::{sync::Arc, path::Path, net::SocketAddr, time::Duration};
+use tower_http::{services::ServeDir, cors::{CorsLayer, Any}};
+use hyper::http::{Method, HeaderName, HeaderValue};
+use std::{sync::Arc, path::Path};
 use crate::app_error::app_error::AppError;
 // Removed incomplete use statement
 
@@ -73,6 +73,20 @@ async fn main() -> Result<(), AppError> {
         pool: pool.clone(),
     });
 
+    // configure CORS
+    let cors = CorsLayer::new()
+        .allow_origin("http://localhost:3000".parse::<HeaderValue>()
+            .map_err(|e| {
+                AppError::ServerError(format!("Failed to parse CORS origin: {}", e))
+            })?)
+        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::OPTIONS])
+        .allow_headers([
+            HeaderName::from_static("content-type"),
+            HeaderName::from_static("authorization"),
+            HeaderName::from_static("x-csrf-token"),
+        ])
+        .allow_credentials(true);
+
     // Create the router
     let app = Router::new()
         .route("/", get(routes::home::serve_home))
@@ -88,6 +102,7 @@ async fn main() -> Result<(), AppError> {
                 header::HeaderValue::from_static("nosniff"),
             )
         )
+        .layer(cors)
         .with_state(app_state);
 
     let addr = format!("{}:{}", config.server.host, config.server.port);
