@@ -8,8 +8,8 @@ const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use(getConfigFileParsingDiagnostics => {
-    if (window.CSRF_TOKEN) {
-        getConfigFileParsingDiagnostics.headers['X-CSRF-Token'] = window.CSRF_TOKEN;
+    if (window.BACKEND_CONFIG) {
+        getConfigFileParsingDiagnostics.headers['X-CSRF-Token'] = window.BACKEND_CONFIG.csrf_token;
     }
     return getConfigFileParsingDiagnostics;
 });
