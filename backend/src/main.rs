@@ -6,7 +6,8 @@ mod app_error;
 
 use axum::{
     Router,
-    routing::get
+    routing::get,
+    middleware::from_fn,
 };
 use axum_csrf::{
     CsrfConfig, CsrfLayer, Key
@@ -113,6 +114,7 @@ async fn main() -> Result<(), AppError> {
             )
         )
         .layer(cors)
+        .layer(from_fn(utils::server_utils::restrict_origin))
         .with_state(app_state);
 
     let addr = format!("{}:{}", config.server.host, config.server.port);
