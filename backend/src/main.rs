@@ -5,18 +5,19 @@ mod models;
 mod app_error;
 
 use axum::{
-    extract::State,
     Router,
-    routing::get
+    routing::get,
+    middleware::from_fn,
 };
 use axum_csrf::{
-    CsrfConfig, CsrfLayer, CsrfToken, Key
+    CsrfConfig, CsrfLayer, Key
 };
 use hyper::header;
 use tower_cookies::CookieManagerLayer;
 use tokio;
-use tower_http::services::ServeDir;
-use std::{sync::Arc, path::Path, net::SocketAddr, time::Duration};
+use tower_http::{services::ServeDir, cors::{CorsLayer, Any}};
+use hyper::http::{Method, HeaderName, HeaderValue};
+use std::{sync::Arc, path::Path};
 use crate::app_error::app_error::AppError;
 // Removed incomplete use statement
 
@@ -36,8 +37,13 @@ impl AppCsrfConfig {
     pub fn new() -> Self {
         let csrf_key = Key::generate();
         let csrf_config = CsrfConfig::new()
-            .with_key(Some(csrf_key.clone()))
-            .with_cookie_path("/".to_string());
+        .with_key(Some(csrf_key.clone()))
+        .with_cookie_path("/".to_string())
+        .with_http_only(true)    
+        .with_secure(true)       
+        .with_cookie_same_site(axum_csrf::SameSite::Strict) 
+        .with_secure(Some("csrf_token".to_string()).is_some())
+        .with_cookie_name(&"_csrf".to_string());
 
         AppCsrfConfig { csrf_key, csrf_config }
     }
@@ -45,6 +51,10 @@ impl AppCsrfConfig {
 
 #[tokio::main]
 async fn main() -> Result<(), AppError> {
+    // Load env
+    dotenv::dotenv()
+        .map_err(|e| AppError::ConfigError(format!("Failed to load .env file: {}", e)))?;
+
     //Set up csrf
     let csrf_config = AppCsrfConfig::new();
 
@@ -53,6 +63,7 @@ async fn main() -> Result<(), AppError> {
         .unwrap_or_else(|_| {
             Path::new("dist").to_string_lossy().to_string()
         });
+
 
     // Set up configuration
     let config = config::app_config::AppConfig::new()
@@ -73,6 +84,20 @@ async fn main() -> Result<(), AppError> {
         pool: pool.clone(),
     });
 
+    // configure CORS
+    let cors = CorsLayer::new()
+        .allow_origin("http://localhost:3000".parse::<HeaderValue>()
+            .map_err(|e| {
+                AppError::ServerError(format!("Failed to parse CORS origin: {}", e))
+            })?)
+        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::OPTIONS])
+        .allow_headers([
+            HeaderName::from_static("content-type"),
+            HeaderName::from_static("authorization"),
+            HeaderName::from_static("x-csrf-token"),
+        ])
+        .allow_credentials(true);
+
     // Create the router
     let app = Router::new()
         .route("/", get(routes::home::serve_home))
@@ -88,6 +113,8 @@ async fn main() -> Result<(), AppError> {
                 header::HeaderValue::from_static("nosniff"),
             )
         )
+        .layer(cors)
+        .layer(from_fn(utils::server_utils::restrict_origin))
         .with_state(app_state);
 
     let addr = format!("{}:{}", config.server.host, config.server.port);

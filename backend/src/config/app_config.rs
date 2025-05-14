@@ -1,5 +1,5 @@
 use config:: {Config, ConfigError, Environment, File};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::env;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
@@ -61,11 +61,20 @@ pub struct Auth {
 }
 
 #[derive(Debug, Deserialize, Clone)]
+pub struct FrontendConfig {
+    pub api_url: String,
+    pub dev_server_port : u16,
+    pub assets_path: String,
+    pub debug: bool,
+}
+
+#[derive(Debug, Deserialize, Clone)]
 pub struct AppConfig {
     pub database: Database,
     pub server: Server,
     pub ethereum: Ethereum,
     pub auth: Auth,
+    pub frontend: FrontendConfig,
 }
 
 impl AppConfig {
@@ -92,8 +101,6 @@ impl AppConfig {
 pub async fn init_config(config: AppConfig) -> Result<PgPool, sqlx::Error> {
     let db_url = &config.database.url;
     let max_connections = config.database.max_connections;
-    eprintln!("Database URL: {}", db_url);
-    eprintln!("Max Connections: {}", max_connections);
 
     let pool = PgPoolOptions::new()
         .max_connections(max_connections)
@@ -111,4 +118,26 @@ pub async fn init_config(config: AppConfig) -> Result<PgPool, sqlx::Error> {
         });
 
     Ok(pool)
+}
+
+#[derive(Serialize)]
+pub struct SerializableFrontendConfig {
+    pub csrf_token: String,
+    pub api_url: String,
+    pub dev_server_port: u16,
+    pub assets_path: String,
+    pub debug: bool
+}
+
+pub fn get_serializable_frontend_config(
+    config: &FrontendConfig,
+    csrf_token: String,
+) -> SerializableFrontendConfig {
+    SerializableFrontendConfig {
+        csrf_token,
+        api_url: config.api_url.clone(),
+        dev_server_port: config.dev_server_port,
+        assets_path: config.assets_path.clone(),
+        debug: config.debug,
+    }
 }

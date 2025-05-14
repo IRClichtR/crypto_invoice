@@ -1,52 +1,37 @@
 <template>
     <div class="home">
-      <h1>{{ CryptoVoice }}</h1>
-      <p>Hello CryptoVoice</p>
-      <button @click="fetchData">This is a button</button>
+      <h1>{{ title }}</h1>
+      <p>Bienvenue sur votre application Vue.js servie par Axum!</p>
+      <div v-if="configLoaded" class="config-info">
+        <p>Configuration chargée avec succès!</p>
+        <p v-if="isDebugMode">Mode debug activé</p>
+      </div>
     </div>
   </template>
   
-  <script lang="ts">
-  import { defineComponent } from 'vue';
-  
-  interface ApiResponse {
-    success: boolean;
-    data?: any;
-    message?: string;
-  }
-  
-  export default defineComponent({
+  <script>
+  export default {
     name: 'HomeView',
     data() {
       return {
-        title: 'Home Page',
-        csrfToken: window.CSRF_TOKEN as string
+        title: 'Page d\'accueil',
+        configLoaded: false,
+        isDebugMode: false,
+        apiUrl: ''
       }
     },
-    methods: {
-      async fetchData(): Promise<void> {
-        try {
-          const response = await fetch('/api/data', {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRF-Token': this.csrfToken
-            }
-          });
-          
-          const result: ApiResponse = await response.json();
-          
-          if (result.success) {
-            console.log('Data received', result.data);
-          } else {
-            console.error('Error:', result.message);
-          }
-        } catch (error) {
-          console.error('Request error:', error);
-        }
+    mounted() {
+      // Vérifier si la configuration backend est disponible
+      if (window.BACKEND_CONFIG) {
+        this.configLoaded = true;
+        this.isDebugMode = window.BACKEND_CONFIG.debug;
+        this.apiUrl = window.BACKEND_CONFIG.api_url;
+        console.log('Configuration du backend chargée:', window.BACKEND_CONFIG);
+      } else {
+        console.warn('Configuration du backend non disponible');
       }
     }
-  });
+  }
   </script>
   
   <style scoped>
@@ -54,26 +39,24 @@
     max-width: 800px;
     margin: 0 auto;
     padding: 20px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
+    font-family: 'Arial', sans-serif;
   }
   
   h1 {
     color: #2c3e50;
+    margin-bottom: 20px;
   }
   
-  button {
-    background-color: #4CAF50;
-    border: none;
-    color: white;
-    padding: 10px 20px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    margin: 4px 2px;
-    cursor: pointer;
-    border-radius: 4px;
+  p {
+    line-height: 1.6;
+    margin-bottom: 15px;
+  }
+  
+  .config-info {
+    margin-top: 30px;
+    padding: 15px;
+    background-color: #f0f4f8;
+    border-radius: 5px;
+    border-left: 4px solid #4299e1;
   }
   </style>
-  
