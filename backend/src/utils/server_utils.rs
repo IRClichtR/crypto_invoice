@@ -22,21 +22,21 @@ pub async fn shutdown_signal(config: AppConfig) {
     config.drop_config();
 }
 
-pub async fn restrict_origin(
-    headers: HeaderMap, 
-    request: Request, 
-    next: Next
-) -> Result<Response, AppError> {
-    if let Some(origin) = headers.get("origin") {
-        if origin != "http://localhost:3000" {
-            return Err(AppError::ServerError(
-                "Invalid origin".to_string()
-            ));
-        }
-    } else {
-        return Err(AppError::ServerError(
-            "Missing origin header".to_string()
-        ));
-    }
-    Ok(next.run(request).await)
-}
+// pub async fn restrict_origin(
+//     headers: HeaderMap, 
+//     request: Request, 
+//     next: Next
+// ) -> Result<Response, AppError> {
+//     if let Some(origin) = headers.get("origin") {
+//         if origin != "http://localhost:3000" {
+//             return Err(AppError::ServerError(
+//                 "Invalid origin".to_string()
+//             ));
+//         }
+//     } else {
+//         return Err(AppError::ServerError(
+//             "Missing origin header".to_string()
+//         ));
+//     }
+//     Ok(next.run(request).await)
+// }

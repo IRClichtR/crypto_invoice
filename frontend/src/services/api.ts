@@ -1,17 +1,18 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-    baseURL: 'https://api.example.com', // Replace with your API base URL
+    baseURL: window.BACKEND_CONFIG?.api_url || 'http//localhost:8080', // Replace with your API base URL
     headers: {
         'Content-Type': 'application/json',
     },
+    withCredentials: true, // Include credentials (cookies) in requests
 });
 
-apiClient.interceptors.request.use(getConfigFileParsingDiagnostics => {
+apiClient.interceptors.request.use(config => {
     if (window.BACKEND_CONFIG) {
-        getConfigFileParsingDiagnostics.headers['X-CSRF-Token'] = window.BACKEND_CONFIG.csrf_token;
+        config.headers['X-CSRF-Token'] = window.BACKEND_CONFIG.csrf_token;
     }
-    return getConfigFileParsingDiagnostics;
+    return config;
 });
 
 export default apiClient;

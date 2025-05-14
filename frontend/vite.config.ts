@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [vue()],
   // Server configuration
   build: {
-    outDir: '../dist',
+    outDir: './dist',
     emptyOutDir: true,
     rollupOptions: {
       input: {

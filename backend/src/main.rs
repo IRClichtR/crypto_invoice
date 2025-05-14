@@ -7,7 +7,7 @@ mod app_error;
 use axum::{
     Router,
     routing::get,
-    middleware::from_fn,
+    // middleware::from_fn,
 };
 use axum_csrf::{
     CsrfConfig, CsrfLayer, Key
@@ -15,7 +15,7 @@ use axum_csrf::{
 use hyper::header;
 use tower_cookies::CookieManagerLayer;
 use tokio;
-use tower_http::{services::ServeDir, cors::{CorsLayer, Any}};
+use tower_http::{services::ServeDir, cors::CorsLayer};
 use hyper::http::{Method, HeaderName, HeaderValue};
 use std::{sync::Arc, path::Path};
 use crate::app_error::app_error::AppError;
@@ -114,7 +114,7 @@ async fn main() -> Result<(), AppError> {
             )
         )
         .layer(cors)
-        .layer(from_fn(utils::server_utils::restrict_origin))
+        // .layer(from_fn(utils::server_utils::restrict_origin))
         .with_state(app_state);
 
     let addr = format!("{}:{}", config.server.host, config.server.port);
