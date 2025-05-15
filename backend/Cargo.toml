@@ -13,10 +13,12 @@ config = "0.15.11"
 dotenv = "0.15.0"
 hyper = { version = "1.6.0", features = ["full"] }
 jsonwebtoken = "9.3.1"
+oauth2 = "5.0.0"
 rand = "0.9.1"
+salt = "0.2.3"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-sqlx = { version = "0.8.5", features = ["runtime-tokio-native-tls", "postgres", "chrono", "uuid", "migrate"] }
+sqlx = { version = "0.8.5", features = ["runtime-tokio-native-tls", "postgres", "chrono", "uuid", "migrate", "json"] }
 thiserror = "2.0.12"
 tokio = {version = "1.44.2", features = ["full"] }
 tower = "0.5.2"
@@ -25,3 +27,4 @@ tower-http = { version = "0.6.2", features = ["cors", "trace", "fs", "set-header
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 uuid = { version = "1.16.0", features = ["v4", "serde"] }
+validator = { version = "0.20.0", features = ["derive"] }
