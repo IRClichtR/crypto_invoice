@@ -39,6 +39,12 @@ impl std::error::Error for AppError {
     }
 }
 
+impl From<sqlx::Error> for AppError {
+    fn from(error: sqlx::Error) -> Self {
+        AppError::DatabaseError(error.to_string())
+    }
+}
+
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         match self {
