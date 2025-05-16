@@ -14,12 +14,12 @@ CREATE TYPE invoice_status AS ENUM (
 
 CREATE TYPE event_type AS ENUM (
     'login',
-    'failed_login',
-    'wallet_connected',
-    'wallet_disconnected',
-    'password_changed',
-    'account_locked',
-    'account_unlocked'
+    'failedlogin',
+    'walletconnected',
+    'walletdisconnected',
+    'passwordchanged',
+    'accountlocked',
+    'accountunlocked'
 );
 
 -- CREATE TYPE dispute_decision AS ENUM (
