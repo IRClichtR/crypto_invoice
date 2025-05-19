@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::{query, query_as, types::Json, FromRow, PgPool};
 use std::collections::HashMap;
 use validator::Validate;
+use serde_json::Value as JsonValue;
 
 use crate::app_error::app_error::AppError;
 #[derive(Debug, FromRow, Serialize, Deserialize)]
@@ -17,7 +18,7 @@ pub struct User {
     is_active: bool,
     is_admin: bool,
     is_verified: bool,
-    metadata: Json<HashMap<String, serde_json::Value>>,
+    pub metadata: Option<JsonValue>
 }
 
 #[derive(Debug, Serialize, Deserialize, Validate)]
@@ -26,7 +27,7 @@ pub struct UserInput {
     #[validate(email)]
     pub email: String,
     pub username: String,
-    pub metadata: Option<Json<HashMap<String, serde_json::Value>>>,
+    pub metadata: JsonValue
 }
 
 #[derive(Debug, Serialize, Deserialize, Validate)]
@@ -36,7 +37,7 @@ pub struct UserInputUpdate {
     pub username: String,
     pub is_active: bool,
     pub is_admin: bool,
-    pub metadata: Option<Json<HashMap<String, serde_json::Value>>>,
+    pub metadata: Option<JsonValue>
 }
 
 #[derive(Debug, FromRow)]
@@ -55,9 +56,12 @@ impl User {
         user_input: &UserInput,
     ) -> Result<User, AppError> {
         let now = Utc::now().naive_utc();
-        let metadata = user_input
-            .metadata.clone()
-            .unwrap_or(Json(HashMap::new()));
+
+        let metadata = if user_input.metadata.is_null() {
+            serde_json::json!({})
+        } else {
+            user_input.metadata.clone()
+        };
 
         let user= query_as!(
             User,
@@ -74,7 +78,7 @@ impl User {
                 metadata
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
             RETURNING id, ethereum_address, email, username, created_at, updated_at,
-                      is_active, is_admin, is_verified, metadata
+                      is_active, is_admin, is_verified, metadata as "metadata: JsonValue"
             "#,
             user_input.ethereum_address,
             user_input.email,
@@ -84,7 +88,7 @@ impl User {
             true, // is_active
             false, // is_admin
             false, // is_verified
-            Json(metadata) as _,
+            metadata, // metadata
         )
         .fetch_one(pool)
         .await?;
@@ -104,7 +108,7 @@ impl User {
             User,
             r#"
             SELECT id, ethereum_address, email, username, created_at, updated_at,
-                   is_active, is_admin, is_verified, metadata
+                   is_active, is_admin, is_verified, metadata as "metadata: JsonValue"
             FROM users
             WHERE id = $1
             "#,
@@ -125,8 +129,11 @@ impl User {
         user.is_active = user_input.is_active;
         user.is_admin = user_input.is_admin;
 
+        // Update metadata if provided
         if let Some(metadata) = &user_input.metadata {
-            user.metadata = metadata.clone();
+            user.metadata = Some(metadata.clone());
+        } else {
+            user.metadata = Some(serde_json::json!({}));
         }
 
         user.updated_at = now;
@@ -148,7 +155,7 @@ impl User {
             user.is_active,
             user.is_admin,
             user.updated_at,
-            user.metadata as _,
+            user.metadata,
             user.id
         )
         .execute(pool)
@@ -167,7 +174,7 @@ impl User {
             User,
             r#"
             SELECT id, ethereum_address, email, username, created_at, updated_at,
-                   is_active, is_admin, is_verified, metadata
+                   is_active, is_admin, is_verified, metadata as "metadata: JsonValue"
             FROM users
             WHERE ethereum_address = $1
             "#,
@@ -187,7 +194,7 @@ impl User {
             User,
             r#"
             SELECT id, ethereum_address, email, username, created_at, updated_at,
-                   is_active, is_admin, is_verified, metadata
+                   is_active, is_admin, is_verified, metadata as "metadata: JsonValue"
             FROM users
             WHERE id = $1
             "#,
@@ -228,7 +235,7 @@ impl AuthChallenge {
             RETURNING id, ethereum_address, challenge, expires_at, used, created_at
             "#,
             uuid::Uuid::new_v4(),
-            ethereum_address,
+            address,
             challenge,
             expires_at,
             false
