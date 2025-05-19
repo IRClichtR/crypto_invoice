@@ -33,7 +33,7 @@ pub struct SecurityEvent {
 pub async fn record_event(
     pool: &PgPool,
     event_type: EventType,
-    user_id: Uuid
+    user_id: Uuid,
     client_ip: IpNetwork,
     user_agent: &str,
     metadata: JsonValue,
@@ -150,7 +150,9 @@ pub async fn add_token_to_blacklist(
         user_id,
         jti,
         expires_at,
+        issued_at,
         now,
+        reason
     )
     .execute(pool)
     .await?;
