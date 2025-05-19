@@ -6,7 +6,7 @@ mod app_error;
 
 use axum::{
     Router,
-    routing::get,
+    routing::get
     // middleware::from_fn,
 };
 use axum_csrf::{

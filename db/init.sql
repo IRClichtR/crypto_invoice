@@ -14,12 +14,12 @@ CREATE TYPE invoice_status AS ENUM (
 
 CREATE TYPE event_type AS ENUM (
     'login',
-    'failed_login',
-    'wallet_connected',
-    'wallet_disconnected',
-    'password_changed',
-    'account_locked',
-    'account_unlocked'
+    'failedlogin',
+    'walletconnected',
+    'walletdisconnected',
+    'passwordchanged',
+    'accountlocked',
+    'accountunlocked'
 );
 
 -- CREATE TYPE dispute_decision AS ENUM (
@@ -45,12 +45,12 @@ CREATE TABLE IF NOT EXISTS users (
     ethereum_address VARCHAR(42) UNIQUE NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     username VARCHAR(50) UNIQUE NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    is_active BOOLEAN DEFAULT TRUE,
-    is_admin BOOLEAN DEFAULT FALSE, 
-    is_verified BOOLEAN DEFAULT FALSE,
-    metadata JSONB DEFAULT '{}'::JSONB
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    is_admin BOOLEAN NOT NULL DEFAULT FALSE, 
+    is_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    metadata JSONB NOT NULL DEFAULT '{}'::JSONB
 );
 
 CREATE TABLE IF NOT EXISTS invoices (
@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS auth_challenges (
 
 CREATE TABLE IF NOT EXISTS security_events (
     id UUID PRIMARY KEY,
-    user_id UUID REFERENCES users(id),
+    user_id UUID NOT NULL REFERENCES users(id),
     event_type event_type NOT NULL,
     timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     client_ip INET,
