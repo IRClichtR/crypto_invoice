@@ -33,7 +33,7 @@ pub struct SecurityEvent {
 pub async fn record_event(
     pool: &PgPool,
     event_type: EventType,
-    user_id: Uuid,
+    user_id: Uuid
     client_ip: IpNetwork,
     user_agent: &str,
     metadata: JsonValue,
@@ -49,6 +49,7 @@ pub async fn record_event(
     };
 
     let _query = sqlx::query!(
+
         r#"
         INSERT INTO security_events (
             id, event_type, user_id, timestamp, client_ip, user_agent, metadata
@@ -150,8 +151,6 @@ pub async fn add_token_to_blacklist(
         jti,
         expires_at,
         now,
-        now,
-        reason
     )
     .execute(pool)
     .await?;

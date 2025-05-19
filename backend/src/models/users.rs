@@ -7,6 +7,7 @@ use validator::Validate;
 use serde_json::Value as JsonValue;
 
 use crate::app_error::app_error::AppError;
+
 #[derive(Debug, FromRow, Serialize, Deserialize)]
 pub struct User {
     pub id: Uuid,
@@ -38,6 +39,7 @@ pub struct UserInputUpdate {
     pub is_active: bool,
     pub is_admin: bool,
     pub metadata: Option<JsonValue>
+
 }
 
 #[derive(Debug, FromRow)]
@@ -79,6 +81,7 @@ impl User {
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
             RETURNING id, ethereum_address, email, username, created_at, updated_at,
                       is_active, is_admin, is_verified, metadata as "metadata: JsonValue"
+
             "#,
             user_input.ethereum_address,
             user_input.email,
@@ -89,6 +92,7 @@ impl User {
             false, // is_admin
             false, // is_verified
             metadata, // metadata
+
         )
         .fetch_one(pool)
         .await?;
@@ -109,6 +113,7 @@ impl User {
             r#"
             SELECT id, ethereum_address, email, username, created_at, updated_at,
                    is_active, is_admin, is_verified, metadata as "metadata: JsonValue"
+
             FROM users
             WHERE id = $1
             "#,
@@ -133,7 +138,7 @@ impl User {
         if let Some(metadata) = &user_input.metadata {
             user.metadata = Some(metadata.clone());
         } else {
-            user.metadata = Some(serde_json::json!({}));
+            user.metadata = Some(serde_json::json!({}))
         }
 
         user.updated_at = now;
@@ -284,6 +289,7 @@ impl AuthChallenge {
             SET used = true
             WHERE id = $1
             "#,
+
             challenge_id
         )
         .execute(pool)
