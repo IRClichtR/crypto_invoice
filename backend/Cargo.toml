@@ -11,6 +11,7 @@ axum_csrf = { version = "0.11.0", features = ["layer"] }
 chrono = { version = "0.4.41", features = ["serde"] }
 config = "0.15.11"
 dotenv = "0.15.0"
+hex = "0.4.3"
 hyper = { version = "1.6.0", features = ["full"] }
 jsonwebtoken = "9.3.1"
 oauth2 = "5.0.0"
