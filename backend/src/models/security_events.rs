@@ -1,7 +1,7 @@
 use uuid::Uuid;
 use chrono::{NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
-use sqlx::{query, types::{ipnetwork::IpNetwork, Json, JsonValue}, FromRow, PgPool, Type};
+use sqlx::{query, types::{ipnetwork::IpNetwork, JsonValue}, FromRow, PgPool, Type};
 use std::collections::HashMap;
 
 use crate::app_error::app_error::AppError;
