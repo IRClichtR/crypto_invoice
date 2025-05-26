@@ -6,10 +6,8 @@ use validator::Validate;
 use rand::Rng;
 use sha3::{Keccak256, Digest};
 use hex;
-use secp256k1::{Message, PublicKey, Secp256k1};
+use secp256k1::{Message, Secp256k1};
 use secp256k1::ecdsa::{RecoverableSignature, RecoveryId};
-use tiny_keccak::{Hasher, Keccak};
-use std::str::FromStr;
 
 use crate::app_error::app_error::AppError;
 
