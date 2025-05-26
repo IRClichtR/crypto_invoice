@@ -13,6 +13,8 @@ use std::str::FromStr;
 
 use crate::app_error::app_error::AppError;
 
+// https://eips.ethereum.org/EIPS/eip-4361
+
 #[derive(Debug, FromRow)]
 pub struct AuthChallenge {
     pub id: Uuid,
