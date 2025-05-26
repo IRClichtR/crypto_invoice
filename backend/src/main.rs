@@ -99,23 +99,11 @@ async fn main() -> Result<(), AppError> {
         .allow_credentials(true);
 
     // Create the router
-    let app = Router::new()
-        .route("/", get(routes::home::serve_home))
-        // other routes to be added here
-        .nest_service(
-            "/assets", ServeDir::new(format!("{}/assets", vue_dist_path))
-        )
-        .layer(CookieManagerLayer::new())
-        .layer(CsrfLayer::new(csrf_config.csrf_config.clone()))
-        .layer(
-            tower_http::set_header::SetResponseHeaderLayer::if_not_present(
-                header::X_CONTENT_TYPE_OPTIONS,
-                header::HeaderValue::from_static("nosniff"),
-            )
-        )
-        .layer(cors)
-        // .layer(from_fn(utils::server_utils::restrict_origin))
-        .with_state(app_state);
+    let app = routes::router::create_app_routes(
+        app_state.clone(),
+        csrf_config.csrf_config.clone(),
+        cors,
+    );
 
     let addr = format!("{}:{}", config.server.host, config.server.port);
 
