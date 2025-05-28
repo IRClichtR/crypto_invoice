@@ -57,14 +57,14 @@ CREATE TABLE IF NOT EXISTS invoices (
     id UUID PRIMARY KEY,
     on_chain_id VARCHAR(255) UNIQUE NOT NULL,
     title VARCHAR(255) NOT NULL,
-    description TEXT,
     amount NUMERIC(20, 8) NOT NULL,
     currency VARCHAR(3) NOT NULL,
     due_date TIMESTAMP NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     status invoice_status DEFAULT 'pending',
-    created_by UUID REFERENCES users(id)
+    created_by UUID REFERENCES users(id),
+    secure_url VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS auth_challenges (
@@ -98,3 +98,17 @@ CREATE TABLE IF NOT EXISTS token_blacklist (
     blacklisted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     reason VARCHAR(255) NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS rate_limits (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    identifier VARCHAR(255) NOT NULL,
+    action_type VARCHAR(100) NOT NULL,
+    attempts_count INTEGER NOT NULL DEFAULT 0,
+    window_start TIMESTAMP NOT NULL,
+    last_attempt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+)
+
+CREATE INDEX idx_rate_limits_identifier_action ON rate_limits(identifier, action_type);
+CREATE INDEX idx_rate_limits_window_start ON rate_limits(window_start);
+CREATE INDEX idx_rate_limits_last_attempt ON rate_limits(last_attempt);
