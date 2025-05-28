@@ -20,6 +20,10 @@ use crate::models::{
     users::{User, UserInputUpdate},
     auth_challenges::{AuthChallenge, verify_signature}
 };
+use crate::utils::{
+    server_utils::extract_client_info,
+    rate_limiter::check_rate_limit
+};
 
 #[derive(Debug, Serialize, Deserialize, Validate)]
 pub struct ChallengeRequestPayload {
@@ -36,8 +40,6 @@ pub struct VerifySignaturePayload {
     pub ethereum_address: String,
     #[validate(length(min = 132, max = 132, message = "Invalid signature format"))]
     pub signature: String,
-    pub email: Option<String>,
-    pub username: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -89,15 +91,18 @@ async fn create_challenge(
     payload.validate()
         .map_err(|e| AppError::OtherError(format!("Invalid Input: {}", e)))?;
 
-    let (client_ip, user_agent) = app_state.extract_client_info(&headers)?;
+    let (client_ip, user_agent) = extract_client_info(&headers)?;
 
     check_rate_limit(&app_state.pool, &client_ip, "signature verification", 3, 60).await?;
 
     let challenge = AuthChallenge::find_active_challenge(
-        &app_state.pool,
-        &payload.ethereum_address,
+        app_state.pool,
+        &payload.ethereum_address.as_str(),
         &payload.domain,   
     )
+    .await?
+    .ok_or_else(|| AppError::OtherError("No active challenge found".to_string()))?;
+
     Ok(Json(ChallengeResponse { challenge }))
 }
 
