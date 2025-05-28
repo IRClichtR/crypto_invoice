@@ -12,8 +12,6 @@ use crate::app_error::app_error::AppError;
 pub struct User {
     pub id: Uuid,
     pub ethereum_address: String,
-    pub email: String,
-    pub username: String,
     created_at: NaiveDateTime,
     updated_at: NaiveDateTime,
     is_active: bool,
@@ -22,12 +20,9 @@ pub struct User {
     pub metadata: Option<JsonValue>
 }
 
-#[derive(Debug, Serialize, Deserialize, Validate)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct UserInput {
     pub ethereum_address: String,
-    #[validate(email)]
-    pub email: String,
-    pub username: String,
     pub metadata: JsonValue
 }
 
@@ -60,22 +55,18 @@ impl User {
             r#"
             INSERT INTO users (
                 ethereum_address, 
-                email, 
-                username, 
                 created_at, 
                 updated_at, 
                 is_active, 
                 is_admin, 
                 is_verified, 
                 metadata
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-            RETURNING id, ethereum_address, email, username, created_at, updated_at,
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING id, ethereum_address, created_at, updated_at,
                       is_active, is_admin, is_verified, metadata as "metadata: JsonValue"
 
             "#,
             user_input.ethereum_address,
-            user_input.email,
-            user_input.username,
             now,
             now,
             true, // is_active
@@ -101,7 +92,7 @@ impl User {
         let mut user = query_as!(
             User,
             r#"
-            SELECT id, ethereum_address, email, username, created_at, updated_at,
+            SELECT id, ethereum_address, created_at, updated_at,
                    is_active, is_admin, is_verified, metadata as "metadata: JsonValue"
 
             FROM users
@@ -111,15 +102,6 @@ impl User {
         )
         .fetch_one(pool)
         .await?;
-
-        // Update only the fields that are provided
-        if !user_input.email.is_empty() {
-            user.email = user_input.email.clone();
-        }
-
-        if !user_input.username.is_empty() {
-            user.username = user_input.username.clone();
-        }
 
         user.is_active = user_input.is_active;
         user.is_admin = user_input.is_admin;
@@ -137,16 +119,12 @@ impl User {
             r#"
             UPDATE users
             SET 
-                email = $1,
-                username = $2,
-                is_active = $3,
-                is_admin = $4,
-                updated_at = $5,
-                metadata = $6
-            WHERE id = $7
+                is_active = $1,
+                is_admin = $2,
+                updated_at = $3,
+                metadata = $4
+            WHERE id = $5
             "#,
-            user.email,
-            user.username,
             user.is_active,
             user.is_admin,
             user.updated_at,
@@ -168,7 +146,7 @@ impl User {
         let user = query_as!(
             User,
             r#"
-            SELECT id, ethereum_address, email, username, created_at, updated_at,
+            SELECT id, ethereum_address, created_at, updated_at,
                    is_active, is_admin, is_verified, metadata as "metadata: JsonValue"
             FROM users
             WHERE ethereum_address = $1
@@ -188,7 +166,7 @@ impl User {
         let user = query_as!(
             User,
             r#"
-            SELECT id, ethereum_address, email, username, created_at, updated_at,
+            SELECT id, ethereum_address, created_at, updated_at,
                    is_active, is_admin, is_verified, metadata as "metadata: JsonValue"
             FROM users
             WHERE id = $1

@@ -6,12 +6,14 @@ use axum::{
     Router,
 };
 use axum_csrf::CsrfToken;
+use hyper::client;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use uuid::Uuid;
 use validator::Validate;
 use std::sync::Arc;
 
+use crate::AppState;
 use crate::app_error::app_error::AppError;
 use crate::models::{
     security_events::{EventType, SecurityEvent, record_event},
@@ -69,10 +71,10 @@ pub struct ErrorResponse {
 pub fn auth_routes() -> Router<Arc<AppState>> {
     Router::new()
         .route("/challenge", post(create_challenge))
-        .route("/verify_signature", post(verify_signature))
-        .route("refresh_token", post(refresh_token))
-        .route("/logout", post(logout))
-        .route("/me", get(get_current_user))
+        // .route("/verify_signature", post(verify_signature))
+        // .route("refresh_token", post(refresh_token))
+        // .route("/logout", post(logout))
+        // .route("/me", get(get_current_user))
 }
 
 //========================================================================================
@@ -87,7 +89,15 @@ async fn create_challenge(
     payload.validate()
         .map_err(|e| AppError::OtherError(format!("Invalid Input: {}", e)))?;
 
-    let challenge = format!("Challenge for {}", payload.ethereum_address);
+    let (client_ip, user_agent) = app_state.extract_client_info(&headers)?;
+
+    check_rate_limit(&app_state.pool, &client_ip, "signature verification", 3, 60).await?;
+
+    let challenge = AuthChallenge::find_active_challenge(
+        &app_state.pool,
+        &payload.ethereum_address,
+        &payload.domain,   
+    )
     Ok(Json(ChallengeResponse { challenge }))
 }
 

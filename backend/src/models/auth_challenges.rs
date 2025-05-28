@@ -32,10 +32,20 @@ pub struct ChallengeRequest {
     pub ethereum_address: String,
 }
 
+#[derive(Debug, Serialize)]
 pub struct ChallengeResponse {
     pub challenge_id: Uuid,
     pub message: String,
     pub expires_at: NaiveDateTime,
+}
+
+#[derive(Debug, Serialize, Deserialize, Validate)]
+pub struct SignatureVerificationRequest {
+    pub challenge_id: Uuid,
+    #[validate(length(min = 42, max = 42))]
+    pub ethereum_address: String,
+    #[validate(length(min = 132, max = 132))]
+    pub signature: String,
 }
 
 impl AuthChallenge {
