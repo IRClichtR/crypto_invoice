@@ -32,6 +32,7 @@ impl Database {
 pub struct Server {
     pub host: String,
     pub port: u16,
+    pub domain: String,
 }
 
 impl Server {
