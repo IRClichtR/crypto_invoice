@@ -64,48 +64,6 @@ pub struct UserInfo {
     pub is_admin: bool,
 }
 
-// #[derive(Debug, Serialize, Deserialize, Validate)]
-// pub struct ChallengeRequestPayload {
-//     #[validate(length(min = 42, max = 42, message = "Invalid Ethereum address format"))]
-//     pub ethereum_address: String,
-//     #[validate(url(message = "Invalid domain format"))]
-//     pub domain: String,
-//     pub challenge_id: Uuid,
-// }
-
-// #[derive(Debug, Serialize, Deserialize, Validate)]
-// pub struct VerifySignaturePayload {
-//     pub challenge_id: Uuid,
-//     #[validate(length(min = 42, max = 42, message = "Invalid Ethereum address format"))]
-//     pub ethereum_address: String,
-//     #[validate(length(min = 132, max = 132, message = "Invalid signature format"))]
-//     pub signature: String,
-// }
-
-// #[derive(Debug, Serialize)]
-// pub struct AuthSuccessResponse {
-//     pub access_token: String,
-//     pub refresh_token: String,
-//     pub expires_in: i64,
-//     pub user: UserInfo
-// }
-
-// #[derive(Debug, Serialize)]
-// pub struct UserInfo {
-//     pub id: Uuid,
-//     pub ethereum_address: String,
-//     pub email: Option<String>,
-//     pub username: Option<String>,
-//     pub is_verified: bool,
-// }
-
-// #[derive(Debug, Serialize)]
-// pub struct ErrorResponse {
-//     pub error: String,
-//     pub message: String,
-//     pub code: u16,
-// }
-
 //========================================================================================
 // AUTH ROUTES CONFIGURATION
 //========================================================================================

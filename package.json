@@ -2,12 +2,15 @@
   "name": "hardhat-project",
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@types/vue-router": "^2.0.0",
     "hardhat": "^2.22.18"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.2.0",
     "dotenv": "^16.4.7",
-    "ethers": "^6.13.5"
+    "ethers": "^6.13.5",
+    "vue": "^3.5.16",
+    "vue-router": "^4.5.1"
   },
   "resolutions": {
     "ws": "^8.17.1"
