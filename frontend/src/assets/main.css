@@ -1,0 +1,198 @@
+
+/* 
+ * Configuration des polices pour l'application Leka
+ * 
+ * Cette configuration charge et applique des polices monospace open-source
+ * qui donnent à l'application un aspect technique et moderne, parfait
+ * pour une application blockchain et cryptographique.
+ */
+
+/* Import des polices depuis Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap');
+
+/* 
+ * Alternative: si vous préférez JetBrains Mono, remplacez la ligne ci-dessus par:
+ * @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap');
+ * 
+ * Alternative: pour Source Code Pro:
+ * @import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+ * 
+ * Alternative: pour IBM Plex Mono:
+ * @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap');
+ */
+
+/* 
+ * Définition de variables CSS pour les polices
+ * Cette approche permet de changer facilement la police dans toute l'application
+ */
+:root {
+  /* Police principale monospace pour l'application */
+  --font-mono: 'Fira Code', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
+  
+  /* Police de fallback pour les éléments non-techniques */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  
+  /* Variables pour les tailles de police */
+  --font-size-small: 0.875rem;   /* 14px */
+  --font-size-base: 1rem;        /* 16px */
+  --font-size-large: 1.125rem;   /* 18px */
+  --font-size-xl: 1.25rem;       /* 20px */
+  --font-size-2xl: 1.5rem;       /* 24px */
+  --font-size-3xl: 2rem;         /* 32px */
+  
+  /* Variables pour les hauteurs de ligne optimisées pour les polices monospace */
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+}
+
+/* 
+ * Application globale de la police monospace
+ * Tous les éléments de l'application utiliseront cette police par défaut
+ */
+html, body {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  
+  /* Amélioration du rendu des polices */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "liga" 1, "calt" 1; /* Active les ligatures pour Fira Code */
+}
+
+/* 
+ * Styles spécifiques pour différents types de contenu
+ * Ces classes permettent d'appliquer des styles appropriés selon le contexte
+ */
+
+/* Classe pour les éléments nécessitant une police sans-serif (comme les logos) */
+.font-sans {
+  font-family: var(--font-sans);
+}
+
+/* Classe pour forcer l'utilisation de la police monospace */
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Styles pour les adresses Ethereum et hashes cryptographiques */
+.crypto-address, .crypto-hash {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  letter-spacing: 0.025em; /* Légère augmentation de l'espacement pour la lisibilité */
+  word-break: break-all; /* Permet la coupure des longues chaînes */
+  background: rgba(0, 0, 0, 0.05);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Styles pour les blocs de code */
+.code-block {
+  font-family: var(--font-mono);
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 1rem;
+  overflow-x: auto;
+  font-size: var(--font-size-small);
+  line-height: var(--line-height-relaxed);
+}
+
+/* Styles pour les éléments inline de code */
+.code-inline {
+  font-family: var(--font-mono);
+  background: rgba(0, 0, 0, 0.05);
+  padding: 0.125rem 0.25rem;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+/* 
+ * Ajustements pour les éléments d'interface utilisateur
+ * Ces styles assurent que l'interface reste lisible avec une police monospace
+ */
+
+/* Boutons avec police monospace */
+button, .btn {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  letter-spacing: 0.025em;
+}
+
+/* Champs de saisie */
+input, textarea, select {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-base);
+}
+
+/* Liens de navigation */
+nav a {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  letter-spacing: 0.025em;
+}
+
+/* 
+ * Réglages spécifiques pour améliorer la lisibilité
+ * Les polices monospace peuvent parfois paraître plus denses
+ */
+
+/* Augmentation légère de l'espacement pour les paragraphes */
+p {
+  letter-spacing: 0.015em;
+}
+
+/* Amélioration de la lisibilité des titres */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: var(--line-height-tight);
+}
+
+/* 
+ * Classes utilitaires pour les différents contextes d'usage
+ */
+
+/* Pour les données techniques (IDs, hashes, etc.) */
+.technical-data {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums; /* Alignement parfait des chiffres */
+  font-feature-settings: "tnum" 1;
+}
+
+/* Pour les montants et valeurs numériques */
+.numeric-value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  text-align: right; /* Alignement à droite pour les colonnes de chiffres */
+}
+
+/* 
+ * Optimisations pour les petits écrans
+ * Les polices monospace peuvent nécessiter des ajustements sur mobile
+ */
+@media (max-width: 768px) {
+  html, body {
+    font-size: var(--font-size-small); /* Réduction légère sur mobile */
+  }
+  
+  /* Ajustement des titres sur mobile */
+  h1 {
+    font-size: var(--font-size-2xl);
+  }
+  
+  h2 {
+    font-size: var(--font-size-xl);
+  }
+  
+  /* Amélioration de la lisibilité des adresses crypto sur mobile */
+  .crypto-address, .crypto-hash {
+    font-size: var(--font-size-small);
+    word-break: break-all;
+    overflow-wrap: break-word;
+  }
+}/*  *//*  *//*  *//*  *//* */ /
