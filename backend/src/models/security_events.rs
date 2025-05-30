@@ -10,6 +10,8 @@ type PgInet = IpNetwork;
 #[derive(Debug, Serialize, Deserialize, Clone, Type)]
 #[sqlx(type_name = "event_type", rename_all = "lowercase")]
 pub enum EventType {
+    ChallengeCreated,
+    ChallengeUsed,
     Login,
     FailedLogin,
     WalletConnected,
@@ -33,7 +35,7 @@ pub struct SecurityEvent {
 pub async fn record_event(
     pool: &PgPool,
     event_type: EventType,
-    user_id: Uuid,
+    user_id: Option<Uuid>,
     client_ip: IpNetwork,
     user_agent: &str,
     metadata: JsonValue,

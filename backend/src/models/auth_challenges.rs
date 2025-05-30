@@ -203,7 +203,7 @@ fn create_siwe_message(
     )
 }
 
-pub fn verify_signature(
+pub fn validate_address(
     signature: &str,
     message: &str,
     expected_address: &str,

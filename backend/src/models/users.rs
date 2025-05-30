@@ -14,9 +14,9 @@ pub struct User {
     pub ethereum_address: String,
     created_at: NaiveDateTime,
     updated_at: NaiveDateTime,
-    is_active: bool,
-    is_admin: bool,
-    is_verified: bool,
+    pub is_active: bool,
+    pub is_admin: bool,
+    pub is_verified: bool,
     pub metadata: Option<JsonValue>
 }
 
