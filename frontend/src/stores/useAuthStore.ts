@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed, readonly } from 'vue'
 import { authService, type User } from '../services/authService'
-import { isEtherAvailable } from '../types/ethereum'
+// import { isEtherAvailable } from '../types/ethereum'
 
 export type AuthState = 
   | 'idle'           // État initial, pas d'action en cours
@@ -101,25 +101,37 @@ export const useAuthStore = defineStore('auth', () => {
         console.log('🧹 État d\'authentification nettoyé')
       }
     
-      function clearError(): void {
+    function clearError(): void {
         errorMessage.value = ''
         if (authState.value === 'error') {
           authState.value = 'idle'
         }
-      }
+    }
+
+    function resetAuthState(): void {
+        console.log('🔄 Remise à zéro complète de l\'état d\'authentification')
+        
+        // Remise à zéro de tous les états réactifs à leurs valeurs initiales
+        user.value = null
+        authState.value = 'idle'
+        errorMessage.value = ''
+        isLoading.value = false
+        
+        console.log('✨ État d\'authentification réinitialisé à l\'état initial')
+    }
     
-      function updateUser(updatedUser: User): void {
+    function updateUser(updatedUser: User): void {
         if (user.value && user.value.id === updatedUser.id) {
           user.value = updatedUser
           console.log('👤 Informations utilisateur mises à jour')
         }
-      }
+    }
     
-      function checkMetaMaskAvailability(): boolean {
+    function checkMetaMaskAvailability(): boolean {
         return isEtherAvailable()
-      }
+    }
     
-      function getErrorDisplayMessage(): string {
+    function getErrorDisplayMessage(): string {
         if (!errorMessage.value) return ''
     
         // Mapping des erreurs courantes vers des messages utilisateur
@@ -132,14 +144,14 @@ export const useAuthStore = defineStore('auth', () => {
         }
     
         return errorMappings[errorMessage.value] || 'Une erreur s\'est produite. Veuillez réessayer.'
-      }
+    }
     
-      function trackAuthenticationError(error: string): void {
+    function trackAuthenticationError(error: string): void {
         // En développement, simple log console
         if (import.meta.env.DEV) {
           console.warn('📊 Erreur d\'authentification trackée:', error)
         }
-      }
+    }
     
       return {
         // État réactif
@@ -161,6 +173,7 @@ export const useAuthStore = defineStore('auth', () => {
         initializeAuth,
         logout,
         clearError,
+        resetAuthState,
         updateUser,
         checkMetaMaskAvailability,
         getErrorDisplayMessage,

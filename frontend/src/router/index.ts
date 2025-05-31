@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomePage from '../views/HomePage.vue'
+import WelcomePage from '../views/WelcomePage.vue' // Ensure this file exists in the specified path
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -14,18 +15,17 @@ const router = createRouter({
         requestedAuth: false // No auth needed for this page
       }
     },
-     // Dashboard of the user 
-    // {
-    //   path: '/dashboard',
-    //   name: 'dashboard',
-    //   // Chargement paresseux (lazy loading) pour optimiser les performances
-    //   component: () => import('@/views/Dashboard.vue'),
-    //   meta: {
-    //     title: 'Leka - Tableau de bord',
-    //     description: 'Tableau de bord utilisateur',
-    //     requiresAuth: true // Cette page nécessitera une authentification
-    //   }
-    // },
+
+    {
+      path: '/Welcome',
+      name: 'welcome',
+      component: WelcomePage,
+      meta: {
+        title: 'Leka - Welcome page',
+        description: 'Welcome to Leka, your favorite payment solution',
+        requiresAuth: true // Protected view
+      }
+    },
     
     // // Invoices 
     // {
