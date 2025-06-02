@@ -15,8 +15,8 @@ const shouldShowFooter = computed(() => {
 })
 
 console.log('Leka - App component loaded 🚀')
-console.log('Model: ', import.meta.env.MODE);
-console.log('Base URL: ', import.meta.env.BASE_URL);
+console.log('Model: ', import.meta.env.DEBUG_MODE);
+console.log('Base URL: ', import.meta.env.API_BASE_URL);
 
 </script>
 
