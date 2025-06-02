@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed, readonly } from 'vue'
 import { authService, type User } from '../services/authService'
-// import { isEtherAvailable } from '../types/ethereum'
+import { isEtherAvailable } from '../types/ethereum'
 
 export type AuthState = 
   | 'idle'           // État initial, pas d'action en cours
@@ -49,7 +49,7 @@ export const useAuthStore = defineStore('auth', () => {
             authState.value = 'connecting'
             isLoading.value = true
       
-            console.log('🚀 Début du processus d\'authentification Web3')
+            console.log('🚀 Starting Web3 authentication')
       
             // Le service gère tout le flux complexe
             const authenticatedUser = await authService.authenticateWithEther()
@@ -58,14 +58,14 @@ export const useAuthStore = defineStore('auth', () => {
             user.value = authenticatedUser
             authState.value = 'authenticated'
             
-            console.log('✅ Authentification réussie pour:', authenticatedUser.ethereum_address)
+            console.log('✅ Authentication successfull for:', authenticatedUser.ethereum_address)
       
           } catch (error: any) {
             // Gestion centralisée des erreurs
-            console.error('❌ Erreur d\'authentification:', error.message)
+            console.error('❌ Authentication error:', error.message)
             
             authState.value = 'error'
-            errorMessage.value = error.message || 'Une erreur inattendue s\'est produite'
+            errorMessage.value = error.message || 'Unexpected error occurred'
             user.value = null
       
           } finally {
@@ -81,15 +81,15 @@ export const useAuthStore = defineStore('auth', () => {
         if (existingUser && authService.isAuthenticated()) {
             user.value = existingUser
             authState.value = 'authenticated'
-            console.log('🔗 Session utilisateur restaurée:', existingUser.ethereum_address)
+            console.log('🔗 Restaured user session:', existingUser.ethereum_address)
         } else {
-            console.log('👤 Aucune session active trouvée')
+            console.log('👤 No active session found')
             authState.value = 'idle'
         }
     }
 
     function logout(): void {
-        console.log('👋 Déconnexion de l\'utilisateur')
+        console.log('👋 User disconnection')
         
         authService.logout()
         
@@ -98,7 +98,7 @@ export const useAuthStore = defineStore('auth', () => {
         errorMessage.value = ''
         isLoading.value = false
         
-        console.log('🧹 État d\'authentification nettoyé')
+        console.log('🧹 Auth State cleaned')
       }
     
     function clearError(): void {
@@ -109,7 +109,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     function resetAuthState(): void {
-        console.log('🔄 Remise à zéro complète de l\'état d\'authentification')
+        console.log('🔄 Auth state flushed')
         
         // Remise à zéro de tous les états réactifs à leurs valeurs initiales
         user.value = null
@@ -117,13 +117,13 @@ export const useAuthStore = defineStore('auth', () => {
         errorMessage.value = ''
         isLoading.value = false
         
-        console.log('✨ État d\'authentification réinitialisé à l\'état initial')
+        console.log('✨ Auth state reinitialized')
     }
     
     function updateUser(updatedUser: User): void {
         if (user.value && user.value.id === updatedUser.id) {
           user.value = updatedUser
-          console.log('👤 Informations utilisateur mises à jour')
+          console.log('👤 User info updated')
         }
     }
     
@@ -136,20 +136,20 @@ export const useAuthStore = defineStore('auth', () => {
     
         // Mapping des erreurs courantes vers des messages utilisateur
         const errorMappings: Record<string, string> = {
-          'MetaMask n\'est pas installé': 'Veuillez installer MetaMask pour vous connecter',
-          'Connexion refusée par l\'utilisateur': 'Connexion annulée. Essayez à nouveau.',
-          'Signature refusée par l\'utilisateur': 'Signature requise pour la connexion',
-          'Invalid signature': 'Signature invalide. Veuillez réessayer.',
-          'No active challenge found': 'Session expirée. Veuillez recommencer.',
+          'MetaMask is not installed': 'Please connect to MetaMask to continue.',
+          'Connection refused by the User': 'Please restart connexion.',
+          'Refused signature': 'Signature required. Please try again.',
+          'Invalid signature': 'Invalid Signature. Please try again.',
+          'No active challenge found': 'Session expired. Please try again.',
         }
     
-        return errorMappings[errorMessage.value] || 'Une erreur s\'est produite. Veuillez réessayer.'
+        return errorMappings[errorMessage.value] || 'An error has occurred. Please try again.'
     }
     
     function trackAuthenticationError(error: string): void {
         // En développement, simple log console
         if (import.meta.env.DEV) {
-          console.warn('📊 Erreur d\'authentification trackée:', error)
+          console.warn('📊 Tracked connexion error:', error)
         }
     }
     

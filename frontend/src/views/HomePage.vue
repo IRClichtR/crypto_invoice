@@ -39,23 +39,23 @@
     if (isConnecting.value) {
         switch (authStore.authState) {
           case 'connecting':
-            return 'Connexion...'
+            return 'Connecting...'
           case 'challenging':
-            return 'Préparation...'
+            return 'Prepare...'
           case 'signing':
-            return 'Signature en cours...'
+            return 'Signature...'
           case 'authenticating':
-            return 'Vérification...'
+            return 'Verification...'
           default:
-            return 'Connexion...'
+            return 'Connecting...'
         }
       }
       
       if (hasError.value) {
-        return 'Réessayer la connexion'
+        return 'Retry';
       }
       
-      return 'Se connecter avec Ethereum'
+      return 'Connect with MetaMask'
    })
 
    const isMetaMaskAvailable = computed(() => authStore.checkMetaMaskAvailability());
@@ -107,14 +107,14 @@
    * si des tokens valides sont trouvés dans le localStorage.
    */
   onMounted(() => {
-    console.log('🏠 Initialisation de la page d\'accueil')
+    console.log('🏠 HomePage initialization')
     
     // Initialise l'état d'authentification (récupère les tokens stockés)
     authStore.initializeAuth()
     
     // Si l'utilisateur est déjà connecté, le redirige automatiquement
     if (authStore.isAuthenticated) {
-      console.log('👤 Utilisateur déjà connecté, redirection automatique')
+      console.log('👤 User already connected, Redirection')
       router.push('/welcome')
     }
   })
@@ -180,7 +180,7 @@
           </div>
           </div>  
 
-          <button
+          <!-- <button
           class="ethereum-login-btn"
           :class="{
             'loading': isConnecting,
@@ -190,15 +190,15 @@
           @click="hasError ? handleRetry() : handleEthereumLogin()"
           :disabled="isConnecting || isAuthenticated"
           >
-          <!-- Affiche le texte du bouton en fonction de l'état de connexion -->
-          <span class="btn-icon">
+          Affiche le texte du bouton en fonction de l'état de connexion -->
+          <!-- <span class="btn-icon">
               <span v-if="isConnecting" class="loading-spinner"></span>
               <span v-else-if="hasError" class="error-icon">❌</span>
               <span v-else-if="isAuthenticated" class="success-icon">✅</span>
               <span v-else class="default-icon">🦊</span>
           </span>
           <span class="btn-text">{{ buttonText }}</span>
-        </button>
+        </button> -->
 
         <!-- Detailled status message -->
          <div v-if="statusMessage" class="status-container">
