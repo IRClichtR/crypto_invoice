@@ -190,8 +190,8 @@
           @click="hasError ? handleRetry() : handleEthereumLogin()"
           :disabled="isConnecting || isAuthenticated"
           >
-          Affiche le texte du bouton en fonction de l'état de connexion -->
-          <!-- <span class="btn-icon">
+          Affiche le texte du bouton en fonction de l'état de connexion
+          <span class="btn-icon">
               <span v-if="isConnecting" class="loading-spinner"></span>
               <span v-else-if="hasError" class="error-icon">❌</span>
               <span v-else-if="isAuthenticated" class="success-icon">✅</span>

@@ -50,7 +50,7 @@ class AuthService {
     private refreshToken: string | null = null;
 
     constructor() {
-        this.baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+        this.baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
         this.loadTokensFromStorage();
     }
