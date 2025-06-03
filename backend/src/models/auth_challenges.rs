@@ -54,6 +54,7 @@ impl AuthChallenge {
         address: &str,
         domain: &str,
     ) -> Result<AuthChallenge, AppError> {
+        println!("Creating challenge for address: {}", address);
         let now = Utc::now().naive_utc();
         let expires_at = now + chrono::Duration::minutes(5);
 

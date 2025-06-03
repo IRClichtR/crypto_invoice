@@ -8,6 +8,7 @@ use std::sync::Arc;
 use axum::{Router, routing::get};
 use axum_csrf::{CsrfConfig, CsrfLayer};
 use tower_cookies::CookieManagerLayer;
+use crate::routes::auth;
 
 pub fn create_app_routes(
     app_state: Arc<AppState>,
@@ -16,11 +17,11 @@ pub fn create_app_routes(
 ) -> Router {
     // Create router
     let app = Router::new()
-        .route("/", get(serve_home))
-        // other routes to be added here
-        .nest_service(
-            "/assets", ServeDir::new(format!("{}/assets", app_state.vue_dist_path))
+        .nest(
+            "/auth",
+            auth::auth_routes()
         )
+        // other routes to be added here
         .layer(CookieManagerLayer::new())
         .layer(CsrfLayer::new(csrf_config.clone()))
         .layer(

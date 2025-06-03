@@ -1,6 +1,6 @@
 use sqlx::{PgPool, query};
 use chrono::{NaiveDateTime, Utc, Duration};
-use sqlx::{types::ipnetwwork::IpNetwork, FromRow};
+use sqlx::{types::ipnetwork::IpNetwork, FromRow};
 use uuid::Uuid;
 use crate::app_error::app_error::AppError;
 use crate::utils::server_utils::extract_client_info;
@@ -40,9 +40,9 @@ pub async fn check_rate_limit(
     /// get existing rate limit entry
     let mut entry = match get_rate_limit_entry(pool, &identifier, action_type).await?
     {
-        Some(entry) =>  {
+        Some(existing) =>  {
             if existing.window_start < window_start {
-                reset_rate_limit_entry(pool, &identifier, action_type, now).await?;
+                reset_rate_limit_entry(pool, &identifier, action_type, now).await?
             } else {
                 existing
             }
@@ -80,7 +80,7 @@ async fn create_rate_limit_entry(
     
     query!(
         r#"
-        INSERT INTO rate_limits (id, identifier, action_type, attempt_count, window_start, last_attempt)
+        INSERT INTO rate_limits (id, identifier, action_type, attempts_count, window_start, last_attempt)
         VALUES ($1, $2, $3, $4, $5, $6)
         "#,
         id,
@@ -111,7 +111,7 @@ async fn get_rate_limit_entry(
 ) -> Result<Option<RateLimitEntry>, AppError> {
     let entry = query!(
         r#"
-        SELECT id, identifier, action_type, attempt_count, window_start, last_attempt
+        SELECT id, identifier, action_type, attempts_count, window_start, last_attempt
         FROM rate_limits
         WHERE identifier = $1 AND action_type = $2
         "#,
@@ -126,7 +126,7 @@ async fn get_rate_limit_entry(
             id: row.id,
             identifier: row.identifier,
             action_type: row.action_type,
-            attempt_count: row.attempt_count,
+            attempt_count: row.attempts_count,
             window_start: row.window_start,
             last_attempt: row.last_attempt,
         })),
@@ -144,7 +144,7 @@ async fn reset_rate_limit_entry(
     query!(
         r#"
         UPDATE rate_limits
-        SET attempt_count = 1, window_start = $3, last_attempt = $4
+        SET attempts_count = 1, window_start = $3, last_attempt = $4
         WHERE identifier = $1 AND action_type = $2
         "#,
         identifier,
@@ -174,7 +174,7 @@ async fn increment_rate_limit_entry(
     query!(
         r#"
         UPDATE rate_limits
-        SET attempt_count = attempt_count + 1, last_attempt = $3
+        SET attempts_count = attempts_count + 1, last_attempt = $3
         WHERE identifier = $1 AND action_type = $2
         "#,
         identifier,

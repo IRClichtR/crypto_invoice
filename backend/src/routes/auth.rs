@@ -86,6 +86,15 @@ async fn create_challenge(
     headers: HeaderMap,
     Json(payload): Json<ChallengeRequest>,
 ) -> Result<Json<ChallengeResponse>, AppError> {
+    println!("Received challenge request for address: {}", payload.ethereum_address);
+    // validate CSRF token
+    if let Some(csrf_token) = CsrfToken::from_headers(&headers) {
+        if !csrf_token.is_valid() {
+            return Err(AppError::OtherError("Invalid CSRF token".to_string()));
+        }
+    } else {
+        return Err(AppError::OtherError("Missing CSRF token".to_string()));
+    }
     // validate payload
     payload.validate()
         .map_err(|e| AppError::OtherError(format!("Invalid Input: {}", e)))?;
@@ -174,7 +183,7 @@ async fn login(
 
     // find active challenge for user 
     let challenge = AuthChallenge::find_active_challenge(
-        app_state.pool,
+        app_state.pool.clone(),
         &payload.ethereum_address.as_str(),
         payload.challenge_id,   
     )

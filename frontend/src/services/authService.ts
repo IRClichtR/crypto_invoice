@@ -207,6 +207,7 @@ class AuthService {
     }
     
     private getCSRFToken(): string {
+        console.log('Fetching CSRF token from window.BACKEND_CONFIG');
         // TypeScript connaît maintenant la structure exacte de BACKEND_CONFIG
         return window.BACKEND_CONFIG?.csrf_token || '';
     }
