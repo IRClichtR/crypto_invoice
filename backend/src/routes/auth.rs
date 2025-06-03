@@ -88,19 +88,20 @@ async fn create_challenge(
 ) -> Result<Json<ChallengeResponse>, AppError> {
     println!("Received challenge request for address: {}", payload.ethereum_address);
     // validate CSRF token
-    if let Some(csrf_token) = CsrfToken::from_headers(&headers) {
-        if !csrf_token.is_valid() {
-            return Err(AppError::OtherError("Invalid CSRF token".to_string()));
-        }
-    } else {
-        return Err(AppError::OtherError("Missing CSRF token".to_string()));
-    }
+    // if let Some(csrf_token) = CsrfToken::from_headers(&headers) {
+    //     if !csrf_token.is_valid() {
+    //         return Err(AppError::OtherError("Invalid CSRF token".to_string()));
+    //     }
+    // } else {
+    //     return Err(AppError::OtherError("Missing CSRF token".to_string()));
+    // }
     // validate payload
     payload.validate()
         .map_err(|e| AppError::OtherError(format!("Invalid Input: {}", e)))?;
-
+    println!("Payload validated successfully");
     // extract client IP and user agent from headers
     let (client_ip, user_agent) = extract_client_info(&headers)?;
+    println!("Client IP: {}, User Agent: {}", client_ip, user_agent);
 
     // check if request exceeds rate limit
     check_rate_limit(
@@ -111,6 +112,7 @@ async fn create_challenge(
         60
     )
     .await?;
+    println!("Rate limit check passed for IP: {}", client_ip);
 
     // spawn a task to clean up expired challenges
     tokio::spawn({
@@ -119,8 +121,10 @@ async fn create_challenge(
             let _ = AuthChallenge::cleanup_expired(&pool).await;
         }
     });
+    println!("Spawned cleanup task for expired challenges");
 
     let domain = &app_state.config.server.domain.clone();
+
     
     let challenge = AuthChallenge::create_challenge_for_addr(
         &app_state.pool,

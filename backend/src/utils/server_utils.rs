@@ -24,6 +24,8 @@ pub async fn shutdown_signal(config: AppConfig) {
 }
 
 pub fn extract_client_info(headers: &HeaderMap) -> Result<(IpNetwork, String), AppError> {
+    // Extract client IP from headers
+    println!("Extracting client info from headers: {:?}", headers);
     let client_ip = headers
         .get("x-forwarded-for")
         .and_then(|v| v.to_str().ok())
@@ -35,6 +37,7 @@ pub fn extract_client_info(headers: &HeaderMap) -> Result<(IpNetwork, String), A
                 .and_then(|s| s.parse::<IpNetwork>().ok())
         })
         .ok_or_else(|| AppError::ServerError("Client IP not found".to_string()))?;
+    println!("Client IP extracted: {}", client_ip);
 
     let user_agent = headers
         .get("user-agent")

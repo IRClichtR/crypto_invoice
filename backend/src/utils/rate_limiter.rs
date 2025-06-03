@@ -5,7 +5,7 @@ use uuid::Uuid;
 use crate::app_error::app_error::AppError;
 use crate::utils::server_utils::extract_client_info;
 
-#[derive(FromRow)]
+#[derive(FromRow, Debug)]
 struct RateLimitEntry {
     id: Uuid,
     identifier: String,
@@ -24,20 +24,22 @@ pub async fn check_rate_limit(
     max_attempts: i32,
     window_seconds: i64,
 ) -> Result<(), AppError> {
+
     let now = Utc::now().naive_utc();
     let window_start = now - Duration::seconds(window_seconds);
     let identifier = format!("{}:{}", client_ip.network(), action_type);
 
-
-    /// clean up old rate limit entries
+    println!("Checking rate limit for identifier: {}", identifier);
+    // clean up old rate limit entries
     let _ = query!(
         "DELETE FROM rate_limits WHERE window_start < $1",
         now - Duration::hours(24)
     )
     .execute(pool)
     .await;
+    println!("Cleaning up old rate limit entries");
 
-    /// get existing rate limit entry
+    // get existing rate limit entry
     let mut entry = match get_rate_limit_entry(pool, &identifier, action_type).await?
     {
         Some(existing) =>  {
@@ -51,6 +53,7 @@ pub async fn check_rate_limit(
             create_rate_limit_entry(pool, &identifier, action_type, now).await?
         }
     };
+    println!("Rate limit entry for {}: {:?}", identifier, entry);
 
     // Check if the entry is within the rate limit window
     // if not return an error
