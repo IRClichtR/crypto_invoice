@@ -102,14 +102,14 @@ CREATE TABLE IF NOT EXISTS token_blacklist (
 );
 
 CREATE TABLE IF NOT EXISTS rate_limits (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY,
     identifier VARCHAR(255) NOT NULL,
     action_type VARCHAR(100) NOT NULL,
     attempts_count INTEGER NOT NULL DEFAULT 0,
     window_start TIMESTAMP NOT NULL,
     last_attempt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-)
+);
 
 CREATE INDEX idx_rate_limits_identifier_action ON rate_limits(identifier, action_type);
 CREATE INDEX idx_rate_limits_window_start ON rate_limits(window_start);
