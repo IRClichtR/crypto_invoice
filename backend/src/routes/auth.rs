@@ -124,7 +124,6 @@ async fn create_challenge(
     println!("Spawned cleanup task for expired challenges");
 
     let domain = &app_state.config.server.domain.clone();
-
     
     let challenge = AuthChallenge::create_challenge_for_addr(
         &app_state.pool,

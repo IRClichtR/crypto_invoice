@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS auth_challenges (
 
 CREATE TABLE IF NOT EXISTS security_events (
     id UUID PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES users(id),
+    user_id UUID REFERENCES users(id),
     event_type event_type NOT NULL,
     timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     client_ip INET,

@@ -23,7 +23,7 @@ pub enum EventType {
 #[derive(Debug, FromRow, Serialize, Deserialize, Clone)]
 pub struct SecurityEvent {
     pub id: Uuid,
-    pub user_id: Uuid,
+    pub user_id: Option<Uuid>,
     #[sqlx(rename = "event_type")]
     pub event_type: EventType,
     pub timestamp: NaiveDateTime,

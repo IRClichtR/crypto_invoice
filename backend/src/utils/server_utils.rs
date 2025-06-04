@@ -25,19 +25,21 @@ pub async fn shutdown_signal(config: AppConfig) {
 
 pub fn extract_client_info(headers: &HeaderMap) -> Result<(IpNetwork, String), AppError> {
     // Extract client IP from headers
-    println!("Extracting client info from headers: {:?}", headers);
+    println!("Extracting client info from headers");
     let client_ip = headers
         .get("x-forwarded-for")
         .and_then(|v| v.to_str().ok())
+        .and_then(|s| s.split(',').next())
+        .map(str::trim)
         .and_then(|s| s.parse::<IpNetwork>().ok())
-        .or_else(|| {
+        .ok_or_else(|| {
             headers
                 .get("x-real-ip")
                 .and_then(|v| v.to_str().ok())
                 .and_then(|s| s.parse::<IpNetwork>().ok())
         })
-        .ok_or_else(|| AppError::ServerError("Client IP not found".to_string()))?;
-    println!("Client IP extracted: {}", client_ip);
+        .unwrap_or("127.0.0.1".parse().unwrap()); // safe unwrap since 127.0.0.1 is guaranteed to work
+    
 
     let user_agent = headers
         .get("user-agent")
