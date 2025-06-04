@@ -164,9 +164,10 @@ async fn login(
     payload.validate()
         .map_err(|e| AppError::OtherError(format!("Invalid Input: {}", e)))?;
 
+    println!("Login request received for address: {}", payload.ethereum_address);
     // extract client IP and user agent from headers 
     let (client_ip, user_agent) = extract_client_info(&headers)?;
-
+    
     // check if request exceeds rate limit 
     check_rate_limit(
         &app_state.pool, 
@@ -175,6 +176,8 @@ async fn login(
         3,
         60
     ).await?;
+
+    println!("Login: Rate limit check passed for IP: {}", client_ip);
 
     // spawn a task to clean up expired challenges
     tokio::spawn({
@@ -185,6 +188,7 @@ async fn login(
     });
 
     // find active challenge for user 
+    println!("Finding active challenge for address: {}", payload.ethereum_address);
     let challenge = AuthChallenge::find_active_challenge(
         app_state.pool.clone(),
         &payload.ethereum_address.as_str(),
@@ -194,12 +198,14 @@ async fn login(
     .ok_or_else(|| AppError::OtherError("No active challenge found".to_string()))?;
 
     // validate the Ethereum address signature
+    println!("Validating signature for challenge ID: {}", payload.challenge_id);
     let is_valid = validate_address(
         &payload.signature,
         &challenge.challenge_message,
         &payload.ethereum_address,
     )?;
 
+    println!("Signature validation result: {}", is_valid);
     if !is_valid {
         let _ = record_event(
             &app_state.pool,
@@ -217,6 +223,7 @@ async fn login(
     }
 
     // mark the challenge as used
+    println!("Marking challenge as used for ID: {}", challenge.id);
     AuthChallenge::mark_as_used(&app_state.pool, challenge.id).await?;
     // record used challenge event
     let _ = record_event(
@@ -232,6 +239,7 @@ async fn login(
     ).await?;
 
     // find user or create a new one
+    println!("Finding or creating user for address: {}", payload.ethereum_address);
     let user = match User::get_user_by_eth_address(
         &app_state.pool, 
         &payload.ethereum_address,  
@@ -253,6 +261,7 @@ async fn login(
         user.is_admin, 
         &app_state.config.auth.jwt_secret,)
         .map_err(|e| AppError::OtherError(format!("Failed to generate tokens: {}", e)))?;
+    println!("Generated access and refresh tokens for user ID: {}", user.id);
 
     // record successful login event
     let _ = record_event(
@@ -267,6 +276,7 @@ async fn login(
         }),
     ).await?;
 
+    println!("Successfully logged in user ID: {}", user.id);
     Ok(Json(LoginResponse {
         access_token,
         refresh_token,

@@ -50,10 +50,18 @@ impl User {
             user_input.metadata.clone()
         };
 
+        let normalized_address = user_input.ethereum_address.to_lowercase();
+        // Check if the user already exists
+        if let Some(existing_user) = Self::get_user_by_eth_address(pool, &normalized_address).await? {
+            return Ok(existing_user);
+        }
+        // If not, create a new user
+        let id = Uuid::new_v4();
         let user= query_as!(
             User,
             r#"
             INSERT INTO users (
+                id,
                 ethereum_address, 
                 created_at, 
                 updated_at, 
@@ -61,11 +69,12 @@ impl User {
                 is_admin, 
                 is_verified, 
                 metadata
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             RETURNING id, ethereum_address, created_at, updated_at,
                       is_active, is_admin, is_verified, metadata as "metadata: JsonValue"
 
             "#,
+            id,
             user_input.ethereum_address,
             now,
             now,
